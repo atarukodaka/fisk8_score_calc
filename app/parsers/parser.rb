@@ -3,6 +3,7 @@ class Parser
   def parse(params)
 
     jumps = []
+    spins = []
     total_base_value = 0.0
     tes = 0.0
     num_jumps = (params[:segment]  != "FS") ? 3 : (params[:category] == "MEN") ? 8 : 7
@@ -19,6 +20,13 @@ class Parser
       end
     end
 
+    ## spin
+    1.upto(3) do |i|
+      if element = params["spin#{i}_element"]
+        spins[i] = Spin.new(element, goe: params["spin#{i}_goe"])
+      end
+    end
+
     score = {
       tes: tes,
       total_base_value: total_base_value,
@@ -26,6 +34,7 @@ class Parser
       
       elements: {
         jumps: jumps,
+        spins: spins,
       }
     }
   end

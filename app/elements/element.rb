@@ -22,6 +22,17 @@ class Element
         @sovs[data["Element"]] = [data["neg3"].to_f, data["neg2"].to_f, data["neg1"].to_f, data["flat"].to_f, data["pos1"].to_f, data["pos2"].to_f, data["pos3"].to_f]
       end
     end
+    ################
+  end
+  def initialize(element, goe: 0)
+    @base_value = 0
+    @goe_value = 0
+    @value = 0
+    @goe = 0
+    if @element = element.presence
+      @base_value = self.class.base_values[@element] || [0, 0, 0]
+      @goe_value = self.class.sovs[@element].try(:[], goe.to_i+3) || 0.0
+    end
   end
 end
 

@@ -34,6 +34,19 @@ h1 Score Calculater
         td= "%.2f" % [jump.value] if jump
         td= 
         td= jump.comment if jump
+    - 1.upto(3) do |i|
+      - spin = score[:elements][:spins][i]
+      tr
+        td= i
+        td= Spin
+        td= text_field_tag "spin#{i}_element", params["spin#{i}_element"], onchange: "submit(this.form)"
+        td
+        td= "%.2f" % [spin.base_value[0]] if spin
+        td= select_tag "spin#{i}_goe", options_for_select(-3..3, selected: params["spin#{i}_goe"] || 0), onchange: "submit(this.form)"
+        td= "%.2f" % [spin.goe_value] if spin
+        td= "%.2f" % [spin.value] if spin
+        td= 
+        td= spin.comment if spin
     tr
       td
       td
