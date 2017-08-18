@@ -4,6 +4,7 @@ class Parser
 
     jumps = []
     spins = []
+    steps = []
     total_base_value = 0.0
     tes = 0.0
     num_jumps = (params[:segment]  != "FS") ? 3 : (params[:category] == "MEN") ? 8 : 7
@@ -24,8 +25,19 @@ class Parser
     1.upto(3) do |i|
       if element = params["spin#{i}_element"]
         spins[i] = Spin.new(element, goe: params["spin#{i}_goe"])
+        total_base_value += spins[i].base_value
+        tes += spins[i].value
       end
     end
+    ## step
+    1.upto(2) do |i|
+      if element = params["step#{i}_element"]
+        steps[i] = Step.new(element, goe: params["step#{i}_goe"])
+        total_base_value += steps[i].base_value
+        tes += steps[i].value
+      end
+    end
+    
 
     score = {
       tes: tes,
@@ -35,6 +47,7 @@ class Parser
       elements: {
         jumps: jumps,
         spins: spins,
+        steps: steps,
       }
     }
   end
@@ -68,6 +81,7 @@ class Parser
     num_axel = 0
     normalized_jumps = {}
     double_jumps = {}
+    repeated_jumps = Hash.new(0)
 
     ## jumps
     score[:elements][:jumps].each do |jump|
@@ -80,7 +94,7 @@ class Parser
       num_combination +=1 if jump.is_combination
       num_combination3 +=1 if jump.is_combination3
       num_axel += 1 if jump.is_axel
-
+      
       if num_jumps > limit[:num_jumps]
         jump.comment = "num jumps limit over"
         jump.validity = false
@@ -100,9 +114,22 @@ class Parser
         ## combination
         if jump.is_combination3
           jump.comment = "comb3 not allowed"
-          jump.validity = false
-          jump.base_value = 0
-          jump.value = 0
+          jump.invalid = true
+        end
+
+        ## seq
+
+        ## same jump repeatation
+        jump.indivisual_jumps.each_with_index do |i_jump, i|
+          repeated_jumps[i_jump.normalized_jump] += 1
+
+          if repeated_jumps[i_jump.normalized_jump] > 1
+            if i == 1 && i_jump.normalized_jump == jump.indivisual_jumps[0].normalized_jump
+              ;  ## 3T+3T is okey
+            else
+              i_jump.invalid = true
+            end
+          end
         end
       elsif segment == "FS"
         ## zayak
@@ -111,10 +138,10 @@ class Parser
 
           if normalized_jumps[n_jump] > 2
             jump.comment = "num same jump limit over"
-            jump.validity = false
+            jump.invalid = true
           elsif normalized_jumps.select {|_, v| v >=2 }.keys.size > 2
             jump.comment = "zayak"
-            jump.validity = false
+            jump.invalid = true
           end
         end
 
@@ -137,7 +164,7 @@ class Parser
       num_jumps.downto(1) do |i|
         if jump = score[:elements][:jumps][i]
           jump.comment = "axel required"
-          jump.validity = false
+          jump.invalid = true
           break
         end
       end
