@@ -1,0 +1,48 @@
+
+- score ||= {}
+
+h1 Score Calculater
+= form_tag url_for(controller: :calc, action: :index), method: :get do
+  .row
+    label Category / Segment
+    = select_tag :category, options_for_select(["MEN", "LADIES"], selected: params[:category]), onchange: "submit(this.form)"
+    = select_tag :segment, options_for_select(["SP", "FS"], selected: params[:segment]), onchange: "submit(this.form)"
+
+  table.table-striped.table-hover.table-condensed
+    tr
+      th Number
+      th Type
+      th Element
+      th Credit
+      th BaseValue
+      th GOE
+      th SoV
+      th Point
+      th Validity 
+      th Comment
+
+    - 1.upto(score[:num_jumps]).each do |i|
+      - jump = score[:elements][:jumps][i]
+      tr
+        td= i
+        td= Jump
+        td= text_field_tag "jump#{i}_element", params["jump#{i}_element"], onchange: "submit(this.form)"
+        td= check_box_tag "jump#{i}_credit", nil, (params["jump#{i}_credit"]) ? true : false, onchange: "submit(this.form)"
+        td= "%.2f" % [jump.base_value] if jump
+        td= select_tag "jump#{i}_goe", options_for_select(-3..3, selected: params["jump#{i}_goe"] || 0), onchange: "submit(this.form)"
+        td= "%.2f" % [jump.goe_value] if jump
+        td= "%.2f" % [jump.value] if jump
+        td= 
+        td= jump.comment if jump
+    tr
+      td
+      td
+      td
+      td
+      td= "%.2f" % [score[:total_base_value]]
+      td
+      td= 
+      td= "%.2f" % [score[:tes]]
+
+= form_tag url_for(controller: :calc, action: :index), method: :get do
+  = submit_tag "Reset"

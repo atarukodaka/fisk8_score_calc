@@ -1,0 +1,3 @@
+class Spin < Element
+end
+
