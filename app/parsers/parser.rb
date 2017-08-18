@@ -30,7 +30,7 @@ class Parser
       end
     end
     ## step
-    1.upto(2) do |i|
+    1.upto(2) do |i| ## TODO
       if element = params["step#{i}_element"]
         steps[i] = Step.new(element, goe: params["step#{i}_goe"])
         total_base_value += steps[i].base_value
@@ -133,26 +133,26 @@ class Parser
         end
       elsif segment == "FS"
         ## zayak
-        jump.indivisual_jumps.each do |n_jump|
-          normalized_jumps[n_jump] = normalized_jumps[n_jump].to_i + 1
+        jump.indivisual_jumps.each do |i_jump|
+          normalized_jumps[i_jump] = normalized_jumps[i_jump].to_i + 1
 
-          if normalized_jumps[n_jump] > 2
+          if normalized_jumps[i_jump] > 2
             jump.comment = "num same jump limit over"
-            jump.invalid = true
+            i_jump.invalid = true
           elsif normalized_jumps.select {|_, v| v >=2 }.keys.size > 2
             jump.comment = "zayak"
-            jump.invalid = true
+            i_jump.invalid = true
           end
         end
 
         ## double jump limit
-        jump.indivisual_jumps.each do |n_jump|
-          if n_jump =~ /^2/
-            double_jumps[n_jump] = double_jumps[n_jump].to_i + 1
+        jump.indivisual_jumps.each do |i_jump|
+          if i_jump =~ /^2/
+            double_jumps[i_jump] = double_jumps[i_jump].to_i + 1
 
-            if double_jumps[n_jump] > 2
+            if double_jumps[i_jump] > 2
               jump.comment = "double jump limit over"
-              jump.validity = false
+              i_jump.invalid = true
             end
           end
         end

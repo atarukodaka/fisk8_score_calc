@@ -69,6 +69,7 @@ h1 Score Calculater
       td
       td= 
       td= "%.2f" % [score[:tes]]
+  = submit_tag "Calc"
 
 = form_tag url_for(controller: :calc, action: :index), method: :get do
   = submit_tag "Reset"
