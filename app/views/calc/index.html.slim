@@ -1,12 +1,19 @@
 
 - score ||= {}
 
+script
+  | jQuery(function(){
+  |   score_calc = new ScoreCalc;
+  |   score_calc.recalc;
+  | });
+
+
 h1 Score Calculater
 = form_tag url_for(controller: :calc, action: :index), method: :get do
   .row
     label Category / Segment
-    = select_tag :category, options_for_select(["MEN", "LADIES"], selected: params[:category]), onchange: "submit(this.form)"
-    = select_tag :segment, options_for_select(["SP", "FS"], selected: params[:segment]), onchange: "submit(this.form)"
+    = select_tag :category, options_for_select(["MEN", "LADIES"], selected: params[:category])
+    = select_tag :segment, options_for_select(["SP", "FS"], selected: params[:segment])
 
   table.table-striped.table-hover.table-condensed
     tr
@@ -20,56 +27,57 @@ h1 Score Calculater
       th Point
       th Validity 
       th Comment
-
-    - 1.upto(score[:num_jumps]).each do |i|
-      - jump = score[:elements][:jumps][i]
+    - 1.upto(3).each do |i|
       tr
         td= i
-        td= Jump
-        td= text_field_tag "jump#{i}_element", params["jump#{i}_element"], onchange: "submit(this.form)"
-        td= check_box_tag "jump#{i}_credit", nil, (params["jump#{i}_credit"]) ? true : false, onchange: "submit(this.form)"
-        td= "%.2f" % [jump.base_value] if jump
-        td= select_tag "jump#{i}_goe", options_for_select(-3..3, selected: params["jump#{i}_goe"] || 0), onchange: "submit(this.form)"
-        td= "%.2f" % [jump.goe_value] if jump
-        td= "%.2f" % [jump.value] if jump
-        td= 
-        td= jump.comment if jump
+        td Jump
+        td
+          input type="text" id="jump#{i}_element" onchange="score_calc.recalc();"
+        td (credit)
+        td id="jump#{i}_base_value"
+        td
+          = select_tag "jump#{i}_goe", options_for_select(-3..3, selected: params["jump#{i}_goe"] || 0), onchange: "score_calc.recalc();"
+        td id="jump#{i}_goe_value"
+        td id="jump#{i}_value"          
+          
+    // spins
     - 1.upto(3) do |i|
       - spin = score[:elements][:spins][i]
       tr
         td= i
         td= Spin
-        td= text_field_tag "spin#{i}_element", params["spin#{i}_element"], onchange: "submit(this.form)"
         td
-        td= "%.2f" % [spin.base_value] if spin
-        td= select_tag "spin#{i}_goe", options_for_select(-3..3, selected: params["spin#{i}_goe"] || 0), onchange: "submit(this.form)"
-        td= "%.2f" % [spin.goe_value] if spin
-        td= "%.2f" % [spin.value] if spin
-        td= 
-        td= spin.comment if spin
+          input type="text" id="spin#{i}_element" onchange="score_calc.recalc();"
+        td
+        td id="spin#{i}_base_value"
+        td= select_tag "spin#{i}_goe", options_for_select(-3..3, selected: params["spin#{i}_goe"] || 0), onchange: "score_calc.recalc();"
+        td id="spin#{i}_goe_value"
+        td id="spin#{i}_value"          
     - 1.upto(2) do |i|
       - step = score[:elements][:steps][i]
       tr
         td= i
         td= Step
-        td= text_field_tag "step#{i}_element", params["step#{i}_element"], onchange: "submit(this.form)"
         td
-        td= "%.2f" % [step.base_value] if step
-        td= select_tag "step#{i}_goe", options_for_select(-3..3, selected: params["step#{i}_goe"] || 0), onchange: "submit(this.form)"
-        td= "%.2f" % [step.goe_value] if step
-        td= "%.2f" % [step.value] if step
-        td= 
-        td= step.comment if step
+          input type="text" id="step#{i}_element" onchange="score_calc.recalc();"
+        td
+        td id="step#{i}_base_value"
+        td= select_tag "step#{i}_goe", options_for_select(-3..3, selected: params["step#{i}_goe"] || 0), onchange: "score_calc.recalc();"
+        td id="step#{i}_goe_value"
+        td id="step#{i}_value"          
     tr
       td
       td
       td
       td
-      td= "%.2f" % [score[:total_base_value]]
+      td id="total_base_value"
+        = "%.2f" % [score[:total_base_value]]
       td
       td= 
-      td= "%.2f" % [score[:tes]]
+      td id="tes"
+        = "%.2f" % [score[:tes]]
+        
   = submit_tag "Calc"
+  //= button_tag "Reset", onclick: "location.href = '/calc'"
+  = button_tag "Reset", type: "reset"
 
-= form_tag url_for(controller: :calc, action: :index), method: :get do
-  = submit_tag "Reset"
