@@ -71,6 +71,7 @@ var Jump = function(element, goe, credit){
     this.goe = goe;
     this.credit = credit;
     this.element = element;
+    this.credit = credit;
     
     var i_jumps = [];
     var i = 1;
@@ -89,6 +90,9 @@ var Jump = function(element, goe, credit){
 	this.indivisual_jumps.forEach(function(ind_jump, index, ar){
 	    bv += ind_jump.base_value();
 	});
+	if (this.credit){
+	    bv *= 1.1
+	}
 	return bv;
     }
     this.goe_value = function(){
@@ -121,9 +125,6 @@ Step.prototype = new Element();
 
 /* **************************************************************** */
 var ScoreCalc = function(){
-    this.num_jumps = 3;
-    this.num_spins = 3;
-    this.num_steps = 2;
     this.jumps = [];
     this.spins = []
     this.steps = []
@@ -131,6 +132,25 @@ var ScoreCalc = function(){
     this.tes = 0;
 
     this.recalc = function(){
+	console.log("recalc")
+	category = $('#category').val() || "MEN";
+	segment = $('#segment').val() || "SP";
+	console.log(category)
+	console.log(segment)
+
+	this.num_spins = 3;
+	if (segment == "SP"){
+	    this.num_jumps = 3;
+	    this.num_steps = 1;
+	} else {
+	    if (category == "MEN"){
+		this.num_jumps = 8
+	    } else {
+		this.num_jumps = 7;
+	    }
+	    this.num_steps = 2;
+	}
+
 	var total_base_value = 0;
 	var tes = 0;
 
@@ -138,7 +158,8 @@ var ScoreCalc = function(){
 	for(i=1; i<=this.num_jumps; i++){
 	    var element = $('#jump' + i + "_element").val();
 	    var goe= $('#jump' + i + "_goe").val();
-	    jump = new Jump(element, goe, 0)
+	    var credit = $('#jump' + i + "_credit").prop('checked')
+	    jump = new Jump(element, goe, credit)
 	    this.jumps[i] = jump
 
 	    total_base_value += jump.base_value();
@@ -174,24 +195,34 @@ var ScoreCalc = function(){
     this.refresh = function(){
 	for(i=1; i<=this.num_jumps; i++){
 	    jump = this.jumps[i];
-	    $("#jump" + i + "_base_value").text(jump.base_value());
-	    $("#jump" + i + "_goe_value").text(jump.goe_value());
-	    $("#jump" + i + "_value").text(jump.value());
+	    $('#jump' + i).show()
+	    $("#jump" + i + "_base_value").text(jump.base_value().toFixed(2));
+	    $("#jump" + i + "_goe_value").text(jump.goe_value().toFixed(2));
+	    $("#jump" + i + "_value").text(jump.value().toFixed(2));
 	}
+	for (i=this.num_jumps+1; i<=8; i++){
+	    $('#jump' + i).hide()
+	}
+	
 	for(i=1; i<=this.num_spins; i++){
 	    spin = this.spins[i];
-	    $("#spin" + i + "_base_value").text(spin.base_value());
-	    $("#spin" + i + "_goe_value").text(spin.goe_value());
-	    $("#spin" + i + "_value").text(spin.value());
+	    $("#spin" + i + "_base_value").text(spin.base_value().toFixed(2));
+	    $("#spin" + i + "_goe_value").text(spin.goe_value().toFixed(2));
+	    $("#spin" + i + "_value").text(spin.value().toFixed(2));
 	}
 	for(i=1; i<=this.num_steps; i++){
 	    step = this.steps[i];
-	    $("#step" + i + "_base_value").text(step.base_value());
-	    $("#step" + i + "_goe_value").text(step.goe_value());
-	    $("#step" + i + "_value").text(step.value());
+	    $("#step" + i + "_base_value").text(step.base_value().toFixed(2));
+	    $("#step" + i + "_goe_value").text(step.goe_value().toFixed(2));
+	    $("#step" + i + "_value").text(step.value().toFixed(2));
 	}
-	$("#total_base_value").text(this.total_base_value);
-	$('#tes').text(this.tes);
+	for (i=this.num_steps+1; i<=2; i++){
+	    $('#step' + i).hide()
+	}
+	
+
+	$("#total_base_value").text(this.total_base_value.toFixed(2));
+	$('#tes').text(this.tes.toFixed(2));
     }
 }
 

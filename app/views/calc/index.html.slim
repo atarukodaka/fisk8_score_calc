@@ -4,7 +4,7 @@
 script
   | jQuery(function(){
   |   score_calc = new ScoreCalc;
-  |   score_calc.recalc;
+  |   score_calc.recalc();
   | });
 
 
@@ -12,8 +12,8 @@ h1 Score Calculater
 = form_tag url_for(controller: :calc, action: :index), method: :get do
   .row
     label Category / Segment
-    = select_tag :category, options_for_select(["MEN", "LADIES"], selected: params[:category])
-    = select_tag :segment, options_for_select(["SP", "FS"], selected: params[:segment])
+    = select_tag :category, options_for_select(["MEN", "LADIES"]), onchange: "score_calc.recalc();"
+    = select_tag :segment, options_for_select(["SP", "FS"]), onchange: "score_calc.recalc();"
 
   table.table-striped.table-hover.table-condensed
     tr
@@ -27,13 +27,14 @@ h1 Score Calculater
       th Point
       th Validity 
       th Comment
-    - 1.upto(3).each do |i|
-      tr
+    - 1.upto(8).each do |i|
+      tr id="jump#{i}"
         td= i
         td Jump
         td
           input type="text" id="jump#{i}_element" onchange="score_calc.recalc();"
-        td (credit)
+        td
+          = check_box_tag "jump#{i}_credit", nil, false, onchange: "score_calc.recalc();"
         td id="jump#{i}_base_value"
         td
           = select_tag "jump#{i}_goe", options_for_select(-3..3, selected: params["jump#{i}_goe"] || 0), onchange: "score_calc.recalc();"
@@ -43,7 +44,7 @@ h1 Score Calculater
     // spins
     - 1.upto(3) do |i|
       - spin = score[:elements][:spins][i]
-      tr
+      tr id="spin#{i}"
         td= i
         td= Spin
         td
@@ -53,9 +54,10 @@ h1 Score Calculater
         td= select_tag "spin#{i}_goe", options_for_select(-3..3, selected: params["spin#{i}_goe"] || 0), onchange: "score_calc.recalc();"
         td id="spin#{i}_goe_value"
         td id="spin#{i}_value"          
+    // steps
     - 1.upto(2) do |i|
       - step = score[:elements][:steps][i]
-      tr
+      tr id="step#{i}"
         td= i
         td= Step
         td
