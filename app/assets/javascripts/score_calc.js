@@ -3,12 +3,13 @@ var Element = function(element, goe){
     this.element = element;
     this.goe = goe;
     this.invalid = false;
+    this.comment = "";
     this.base_value = function(){
-	if (this.element == ""){ return 0 }
+	if (this.element == "" || this.invalid){ return 0 }
 	return parseFloat(bvsov[this.element].bv);
     }
     this.goe_value = function(){
-	if (this.element == ""){ return 0 }
+	if (this.element == "" || this.invalid ){ return 0 }
 	return bvsov[this.element].sov[this.goe]
     }
     this.value = function(){
@@ -20,6 +21,7 @@ var Element = function(element, goe){
 var IndivisualJump  = function(element, goe){
     this.underrotated = false;
     this.downgraded = false;
+    this.seq = false;
 
     element.match(/^(\d)([a-zA-Z]+)/)
     this.element = element;
@@ -39,30 +41,34 @@ var IndivisualJump  = function(element, goe){
     this.normalized_jump = this.rotation + this.type;
 
     this.base_value = function(){
-	if (this.normalized_jump == ""){
+	if (this.normalized_jump == "" || this.invalid){
 	    return 0
 	}
+	var bv = 0;
 	if (this.downgraded){
 	    if (this.rotation == 1){
-		return 0;
 	    } else {
 		downgraded_rotation = this.rotation - 1;
 		downgraded_jump = downgraded_rotation + this.type
 		if (this.edge_error){
-		    return parseFloat(bvsov[downgraded_jump].v);
+		    bv = parseFloat(bvsov[downgraded_jump].v);
 		} else {
-		    return parseFloat(bvsov[downgraded_jump].bv);
+		    bv = parseFloat(bvsov[downgraded_jump].bv);
 		}
 	    }
 	} else {
 	    if (this.edge_error && this.underrotated){
-		return parseFloat(bvsov[this.normalized_jump].v1);
+		bv = parseFloat(bvsov[this.normalized_jump].v1);
 	    } else if (this.edge_error || this.underrotated){
-		return parseFloat(bvsov[this.normalized_jump].v);
+		bv = parseFloat(bvsov[this.normalized_jump].v);
 	    } else {
-		return parseFloat(bvsov[this.normalized_jump].bv);
+		bv = parseFloat(bvsov[this.normalized_jump].bv);
 	    }
 	}
+	if (this.seq){
+	    bv *= 0.7
+	}
+	return bv
     }
 }
 
@@ -72,6 +78,8 @@ var Jump = function(element, goe, credit){
     this.credit = credit;
     this.element = element;
     this.credit = credit;
+    this.is_combination = false
+    this.is_combination3 = false
     
     var i_jumps = [];
     var i = 1;
@@ -84,7 +92,12 @@ var Jump = function(element, goe, credit){
 	});
     }
     this.indivisual_jumps = i_jumps;
-
+    if (this.indivisual_jumps.length > 2){
+	this.is_combination = true
+    }
+    if (this.indivisual_jumps.length > 3){
+	this.is_combination3 = true
+    }
     this.base_value = function(){
 	var bv = 0;
 	this.indivisual_jumps.forEach(function(ind_jump, index, ar){
@@ -133,17 +146,15 @@ var ScoreCalc = function(){
 
     this.recalc = function(){
 	console.log("recalc")
-	category = $('#category').val() || "MEN";
-	segment = $('#segment').val() || "SP";
-	console.log(category)
-	console.log(segment)
+	this.category = $('#category').val() || "MEN";
+	this.segment = $('#segment').val() || "SP";
 
 	this.num_spins = 3;
-	if (segment == "SP"){
+	if (this.segment == "SP"){
 	    this.num_jumps = 3;
 	    this.num_steps = 1;
 	} else {
-	    if (category == "MEN"){
+	    if (this.category == "MEN"){
 		this.num_jumps = 8
 	    } else {
 		this.num_jumps = 7;
@@ -189,8 +200,36 @@ var ScoreCalc = function(){
 
 	this.total_base_value = total_base_value;
 	this.tes = tes;
-	
+
+	this.validate()
 	this.refresh();
+    }
+    this.validate = function(){
+	var repeated_jumps = {}
+	var i_axel = 0
+
+	if (this.segment == "SP"){
+	    var i_combination = 0;
+
+	    this.jumps.forEach(function(jump, index, ar){
+		if (jump.is_combination3){
+		    jump.indivisual_jumps[3].invalid = true;
+		    jump.comment = "invalid: comb3 in SP"
+		} else if (jump.is_combination){
+		    i_combination += 1
+		    if (i_combination > 1){
+			jump.indivisual_jumps[2].invalid = true
+			jump.indivisual_jumps[1].seq = true
+			jump.comment = "+SEQ"
+		    }
+		}
+	    })
+
+	} else {
+	    
+	}
+	/* axel check */
+	
     }
     this.refresh = function(){
 	for(i=1; i<=this.num_jumps; i++){
@@ -199,7 +238,9 @@ var ScoreCalc = function(){
 	    $("#jump" + i + "_base_value").text(jump.base_value().toFixed(2));
 	    $("#jump" + i + "_goe_value").text(jump.goe_value().toFixed(2));
 	    $("#jump" + i + "_value").text(jump.value().toFixed(2));
+	    $("#jump" + i + "_comment").text(jump.comment);
 	}
+	console.log(this.num_jumps)
 	for (i=this.num_jumps+1; i<=8; i++){
 	    $('#jump' + i).hide()
 	}
@@ -212,6 +253,7 @@ var ScoreCalc = function(){
 	}
 	for(i=1; i<=this.num_steps; i++){
 	    step = this.steps[i];
+	    $('#step' + i).show();
 	    $("#step" + i + "_base_value").text(step.base_value().toFixed(2));
 	    $("#step" + i + "_goe_value").text(step.goe_value().toFixed(2));
 	    $("#step" + i + "_value").text(step.value().toFixed(2));

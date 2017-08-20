@@ -40,7 +40,8 @@ h1 Score Calculater
           = select_tag "jump#{i}_goe", options_for_select(-3..3, selected: params["jump#{i}_goe"] || 0), onchange: "score_calc.recalc();"
         td id="jump#{i}_goe_value"
         td id="jump#{i}_value"          
-          
+        td id="jump#{i}_invalid"          
+        td id="jump#{i}_comment"                    
     // spins
     - 1.upto(3) do |i|
       - spin = score[:elements][:spins][i]
