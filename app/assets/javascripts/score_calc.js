@@ -325,11 +325,11 @@ var ScoreCalc = function(){
 	    var tripple_jumps = {}
 	    var double_jumps = {}
 	    var i_comb3 = 0;
-	    
+
 	    this.jumps.forEach(function(jump, index, ar){
 		/* comb3 check */
 		if (jump.is_combination3){
-		    console.log("comb3")
+		    jump.comment = "comb3"
 		    i_comb3++
 		    if (i_comb3 > 1){
 			console.log("comb3 over")
@@ -339,10 +339,10 @@ var ScoreCalc = function(){
 		    
 		jump.indivisual_jumps.forEach(function(i_jump, index, ar){
 		    n_jump = i_jump.normalized_jump
-		    if (i_jump.rotatino >= 3){
+		    if (i_jump.rotation >= 3){
 			tripple_jumps[n_jump] = (tripple_jumps[n_jump] || 0) + 1
 			if (tripple_jumps[n_jump] > 2){
-			    console.log("# comb > 2")
+			    jump.comment = "# comb > 2"
 			    i_jump.invalid = true;
 			}
 			var i_more_than2 = 0;
@@ -350,7 +350,7 @@ var ScoreCalc = function(){
 			    if (tripple_jumps[key] > 1){
 				i_more_than2++
 				if (key == n_jump && i_more_than2 > 2){
-				    console.log("tripple twice over")
+				    jump.comment = "tripple twice over"
 				    i_jump.invalid = true
 				}
 			    }
