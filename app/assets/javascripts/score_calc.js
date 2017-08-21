@@ -25,7 +25,6 @@ var Element = function(element, goe){
 var IndivisualJump  = function(element, goe){
     this.underrotated = false;
     this.downgraded = false;
-    this.seq = false;
 
     element.match(/^(\d)([A-Z][a-z]*)/)
     this.element = element;
@@ -69,9 +68,6 @@ var IndivisualJump  = function(element, goe){
 		bv = parseFloat(bvsov[this.normalized_jump].bv);
 	    }
 	}
-	if (this.seq){
-	    bv *= 0.7
-	}
 	return bv
     }
     this.is_axel = function(){
@@ -88,6 +84,7 @@ var Jump = function(element, goe, credit){
     this.is_solo = false
     this.is_combination = false
     this.is_combination3 = false
+    this.is_seq = false;
     
     var i_jumps = [];
     var i = 1;
@@ -118,6 +115,10 @@ var Jump = function(element, goe, credit){
 	if (this.credit){
 	    bv *= 1.1
 	}
+	if (this.is_seq){
+	    bv *= 0.7
+	    this.comment = "+SEQ"
+	}
 	return bv;
     }
     this.goe_value = function(){
@@ -142,15 +143,19 @@ var Jump = function(element, goe, credit){
     this.validated_element = function(){
 
 	if (this.indivisual_jumps[1]){
-	    var v_elem = this.indivisual_jumps[1].validated_element()
-	    
-	    for(i=2; i<=3; i++){
-		element = this.indivisual_jumps[i]
-		if (element != undefined){
-		    v_elem += "+" + element.validated_element()
-		}
+	    if (this.is_seq){
+		return this.element + "+SEQ"
+	    } else {
+	      var v_elem = this.indivisual_jumps[1].validated_element()
+
+	      for(i=2; i<=3; i++){
+		  element = this.indivisual_jumps[i]
+		  if (element != undefined){
+		      v_elem += "+" + element.validated_element()
+		  }
+	      }
+		return v_elem + ((this.invalid) ? "*" : "")
 	    }
-	    return v_elem + ((this.invalid) ? "*" : "")
 	} else {
 	    return undefined
 	}
@@ -263,6 +268,16 @@ var ScoreCalc = function(){
 		    }
 		}
 	    })
+	    if (i_combination == 0){ /* SEQ */
+		var jump = this.jumps[2]
+		if (jump && jump.is_axel()){
+		    jump = this.jumps[3]
+		}
+		if (jump){
+		    console.log("+SEQ")
+		    jump.is_seq = true
+		}
+	    }
 	    /* repetation check */
 	    var repeated_jumps = {}
 	    this.jumps.forEach(function(jump, index, ar){
@@ -329,10 +344,9 @@ var ScoreCalc = function(){
 	    this.jumps.forEach(function(jump, index, ar){
 		/* comb3 check */
 		if (jump.is_combination3){
-		    jump.comment = "comb3"
 		    i_comb3++
 		    if (i_comb3 > 1){
-			console.log("comb3 over")
+			jump.comment = "comb3 over"
 			jump.indivisual_jumps[3].invalid = true
 		    }
 		}
