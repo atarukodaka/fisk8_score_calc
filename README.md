@@ -1,24 +1,18 @@
 # README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+# validation
 
-Things you may want to cover:
+## SP
+- 3 comb now alloed
+- combination rotations
+  - men: 2-3, 3-2, 3-3, 4-2, 2-4
+  - ladies: 2-3, 3-2, 3-3
+- same jump not allowed
+- axel required
 
-* Ruby version
+## FS
+- 3 comb only once
+- double jump <=  2
+- 2 of triple or quad <= 2
+- axel required
 
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...

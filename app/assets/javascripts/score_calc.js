@@ -85,6 +85,7 @@ var Jump = function(element, goe, credit){
     this.credit = credit;
     this.element = element;
     this.credit = credit;
+    this.is_solo = false
     this.is_combination = false
     this.is_combination3 = false
     
@@ -99,6 +100,9 @@ var Jump = function(element, goe, credit){
 	});
     }
     this.indivisual_jumps = i_jumps;
+    if (this.indivisual_jumps.length == 2){
+	this.is_solo = true
+    }
     if (this.indivisual_jumps.length > 2){
 	this.is_combination = true
     }
@@ -185,7 +189,7 @@ var ScoreCalc = function(){
     this.recalc = function(){
 	this.category = $('#category').val() || "MEN";
 	this.segment = $('#segment').val() || "SP";
-
+	console.log(this.category + " " + this.segment)
 	this.num_spins = 3;
 	if (this.segment == "SP"){
 	    this.num_jumps = 3;
@@ -243,10 +247,10 @@ var ScoreCalc = function(){
     }
     /* **************************************************************** */
     this.validate = function(){
-
 	if (this.segment == "SP"){
 	    var i_combination = 0;
 
+	    /* combination check */
 	    this.jumps.forEach(function(jump, index, ar){
 		if (jump.is_combination3){
 		    jump.indivisual_jumps[3].invalid = true;
@@ -255,6 +259,7 @@ var ScoreCalc = function(){
 		    i_combination += 1
 		    if (i_combination > 1){
 			jump.indivisual_jumps[2].invalid = true
+			jump.comment = "# combination < 1"
 		    }
 		}
 	    })
@@ -270,32 +275,51 @@ var ScoreCalc = function(){
 			if (index == 2 && jump.indivisual_jumps[1].normalized_element == jump.indivisual_jumps[2].normalized_element){
 			} else {
 			    i_jump.invalid = true
+			    jump.comment = "same jump repeated"
 			}
 		    }
 		})
 	    })
 	    /* combination type check */
+	    console.log(this.category)
+	    category = this.category
 	    this.jumps.forEach(function(jump, index, ar){
-	      if (jump.is_combination){
-		  /* all more than double */
-		if (jump.indivisual_jumps[1].rotation < 2 || jump.indivisual_jumps[2].rotation <2){
-		    console.log("need more than double as combination")
-		    jump.invalid = true
-		} else {
-		    sum_rotations = jump.indivisual_jumps[1].rotation + jump.indivisual_jumps[2].rotation
-		    console.log(sum_rotations)
-		    if (this.category == "MEN"){
-			if (sum_rotations < 5){
-			    console.log("need more rotation: " + sum_rotations)
+		console.log(jump.is_solo)
+		if (jump.is_combination){
+		    /* all more than double */
+		    if (jump.indivisual_jumps[1].rotation < 2 || jump.indivisual_jumps[2].rotation <2){
+			jump.comment = "need more than double as combination"
+			jump.invalid = true
+		    } else {
+			sum_rotations = jump.indivisual_jumps[1].rotation + jump.indivisual_jumps[2].rotation
+			if (category == "MEN"){
+			    console.log(sum_rotations < 5)
+			    if (sum_rotations < 5){
+				jump.comment = "need more rotation: " + sum_rotations
+				jump.invalid = true;
+			    }
+			} else {  /* LADIES */
+			    if (sum_rotations != 5 && sum_rotations != 6){
+				jump.comment = "rotation error: " + sum_rotations
+				jump.invalid = true;
+			    }
 			}
-		    } else {  /* LADIES */
-			if (sum_rotations != 5 && sum_rotations != 6){
-			    console.log("rotation error: " + sum_rotations)
-			    jump.invalid = true;
+		    }
+		} else if (jump.is_solo){
+		    if (jump.indivisual_jumps[1].type != "A"){
+			if (category == "MEN"){
+			    if (jump.indivisual_jumps[1].rotation < 3){
+				jump.comment = "solo: more than 2 required"
+				jump.invalid = true
+			    }
+			} else { /* LADIES */
+			    if (jump.indivisual_jumps[1].rotation != 3){
+				jump.comment = "solo: tripple required"
+				jump.invalid = true
+			    }
 			}
 		    }
 		}
-	      }
 	    })
 	} else {  /* FS */
 	    var tripple_jumps = {}
