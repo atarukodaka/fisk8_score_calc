@@ -25,7 +25,7 @@ h1 Score Calculater
       th GOE
       th SoV
       th Point
-      th Validity 
+      th Validated
       th Comment
     - 1.upto(8).each do |i|
       tr id="jump#{i}"
@@ -40,7 +40,7 @@ h1 Score Calculater
           = select_tag "jump#{i}_goe", options_for_select(-3..3, selected: params["jump#{i}_goe"] || 0), onchange: "score_calc.recalc();"
         td id="jump#{i}_goe_value"
         td id="jump#{i}_value"          
-        td id="jump#{i}_invalid"          
+        td id="jump#{i}_validated_element"          
         td id="jump#{i}_comment"                    
     // spins
     - 1.upto(3) do |i|

@@ -13,7 +13,11 @@ var Element = function(element, goe){
 	return bvsov[this.element].sov[this.goe]
     }
     this.value = function(){
+	if (this.element == "" || this.invalid ){ return 0 }
 	return this.base_value() + this.goe_value();
+    }
+    this.validated_element = function(){
+	return this.element + ((this.invalid) ? "*" : "")
     }
 
 }
@@ -23,9 +27,9 @@ var IndivisualJump  = function(element, goe){
     this.downgraded = false;
     this.seq = false;
 
-    element.match(/^(\d)([a-zA-Z]+)/)
+    element.match(/^(\d)([A-Z][a-z]*)/)
     this.element = element;
-    this.rotation = RegExp.$1;
+    this.rotation = parseInt(RegExp.$1);
     this.type = RegExp.$2;
 
     if (element.match(/\!/)){
@@ -70,8 +74,11 @@ var IndivisualJump  = function(element, goe){
 	}
 	return bv
     }
+    this.is_axel = function(){
+	return this.type == "A"
+    }
 }
-
+IndivisualJump.prototype = new Element();
 
 var Jump = function(element, goe, credit){
     this.goe = goe;
@@ -99,6 +106,7 @@ var Jump = function(element, goe, credit){
 	this.is_combination3 = true
     }
     this.base_value = function(){
+	if (this.invalid){ return 0 }
 	var bv = 0;
 	this.indivisual_jumps.forEach(function(ind_jump, index, ar){
 	    bv += ind_jump.base_value();
@@ -109,10 +117,11 @@ var Jump = function(element, goe, credit){
 	return bv;
     }
     this.goe_value = function(){
+	if (this.invalid){ return 0 }
 	if (this.element == ""){
 	    return 0;
 	}
-	var highest_bv_jump = false;
+	var highest_bv_jump = undefined;
 	var max_bv = 0;
 	this.indivisual_jumps.forEach(function(val, index, ar){
 	    if (max_bv < val.base_value()){
@@ -120,7 +129,36 @@ var Jump = function(element, goe, credit){
 		max_bv = val.base_value();
 	    }
 	});
-	return bvsov[highest_bv_jump.normalized_jump].sov[this.goe]
+	if (highest_bv_jump == undefined){
+	    return 0
+	} else {
+	    return bvsov[highest_bv_jump.normalized_jump].sov[this.goe]
+	}
+    }
+    this.validated_element = function(){
+
+	if (this.indivisual_jumps[1]){
+	    var v_elem = this.indivisual_jumps[1].validated_element()
+	    
+	    for(i=2; i<=3; i++){
+		element = this.indivisual_jumps[i]
+		if (element != undefined){
+		    v_elem += "+" + element.validated_element()
+		}
+	    }
+	    return v_elem + ((this.invalid) ? "*" : "")
+	} else {
+	    return undefined
+	}
+    }
+    this.is_axel = function(){
+	flag = false
+	this.indivisual_jumps.forEach(function(jump, index, ar){
+	    if (jump.is_axel()){
+		flag = true
+	    }
+	})
+	return flag
     }
 }
 Jump.prototype = new Element();
@@ -145,7 +183,6 @@ var ScoreCalc = function(){
     this.tes = 0;
 
     this.recalc = function(){
-	console.log("recalc")
 	this.category = $('#category').val() || "MEN";
 	this.segment = $('#segment').val() || "SP";
 
@@ -204,9 +241,8 @@ var ScoreCalc = function(){
 	this.validate()
 	this.refresh();
     }
+    /* **************************************************************** */
     this.validate = function(){
-	var repeated_jumps = {}
-	var i_axel = 0
 
 	if (this.segment == "SP"){
 	    var i_combination = 0;
@@ -219,16 +255,107 @@ var ScoreCalc = function(){
 		    i_combination += 1
 		    if (i_combination > 1){
 			jump.indivisual_jumps[2].invalid = true
-			jump.indivisual_jumps[1].seq = true
-			jump.comment = "+SEQ"
 		    }
 		}
 	    })
+	    /* repetation check */
+	    var repeated_jumps = {}
+	    this.jumps.forEach(function(jump, index, ar){
+		jump.indivisual_jumps.forEach(function(i_jump, index, ar){
+		    t = repeated_jumps[i_jump.normalized_jump] || 0
+		    repeated_jumps[i_jump.normalized_jump] = t + 1
 
-	} else {
+		    if (repeated_jumps[i_jump.normalized_jump] > 1){
+			console.log(index)
+			if (index == 2 && jump.indivisual_jumps[1].normalized_element == jump.indivisual_jumps[2].normalized_element){
+			} else {
+			    i_jump.invalid = true
+			}
+		    }
+		})
+	    })
+	    /* combination type check */
+	    this.jumps.forEach(function(jump, index, ar){
+	      if (jump.is_combination){
+		  /* all more than double */
+		if (jump.indivisual_jumps[1].rotation < 2 || jump.indivisual_jumps[2].rotation <2){
+		    console.log("need more than double as combination")
+		    jump.invalid = true
+		} else {
+		    sum_rotations = jump.indivisual_jumps[1].rotation + jump.indivisual_jumps[2].rotation
+		    console.log(sum_rotations)
+		    if (this.category == "MEN"){
+			if (sum_rotations < 5){
+			    console.log("need more rotation: " + sum_rotations)
+			}
+		    } else {  /* LADIES */
+			if (sum_rotations != 5 && sum_rotations != 6){
+			    console.log("rotation error: " + sum_rotations)
+			    jump.invalid = true;
+			}
+		    }
+		}
+	      }
+	    })
+	} else {  /* FS */
+	    var tripple_jumps = {}
+	    var double_jumps = {}
+	    var i_comb3 = 0;
 	    
+	    this.jumps.forEach(function(jump, index, ar){
+		/* comb3 check */
+		if (jump.is_combination3){
+		    console.log("comb3")
+		    i_comb3++
+		    if (i_comb3 > 1){
+			console.log("comb3 over")
+			jump.indivisual_jumps[3].invalid = true
+		    }
+		}
+		    
+		jump.indivisual_jumps.forEach(function(i_jump, index, ar){
+		    n_jump = i_jump.normalized_jump
+		    if (i_jump.rotatino >= 3){
+			tripple_jumps[n_jump] = (tripple_jumps[n_jump] || 0) + 1
+			if (tripple_jumps[n_jump] > 2){
+			    console.log("# comb > 2")
+			    i_jump.invalid = true;
+			}
+			var i_more_than2 = 0;
+			for(key in tripple_jumps){
+			    if (tripple_jumps[key] > 1){
+				i_more_than2++
+				if (key == n_jump && i_more_than2 > 2){
+				    console.log("tripple twice over")
+				    i_jump.invalid = true
+				}
+			    }
+			}
+		    } else if (i_jump.rotation == 2){
+			double_jumps[n_jump] = (double_jumps[n_jump] || 0) + 1
+			for(key in double_jumps){
+			    if (double_jumps[key] > 2 && key == n_jump){
+				console.log("double jump twice over")
+				i_jump.invalid = true
+			    }
+			}
+		    }
+		})
+	    })
 	}
 	/* axel check */
+	var i_axel = 0
+	this.jumps.forEach(function(jump, index, ar){
+	    if (jump.is_axel()){
+		i_axel += 1
+	    }
+	})
+	if (i_axel == 0){
+	    if (this.jumps[this.num_jumps] != undefined){
+		this.jumps[this.num_jumps].invalid = true
+		this.jumps[this.num_jumps].comment = "axel required"
+	    }
+	}
 	
     }
     this.refresh = function(){
@@ -238,9 +365,9 @@ var ScoreCalc = function(){
 	    $("#jump" + i + "_base_value").text(jump.base_value().toFixed(2));
 	    $("#jump" + i + "_goe_value").text(jump.goe_value().toFixed(2));
 	    $("#jump" + i + "_value").text(jump.value().toFixed(2));
+	    $("#jump" + i + "_validated_element").text(jump.validated_element());
 	    $("#jump" + i + "_comment").text(jump.comment);
 	}
-	console.log(this.num_jumps)
 	for (i=this.num_jumps+1; i<=8; i++){
 	    $('#jump' + i).hide()
 	}
