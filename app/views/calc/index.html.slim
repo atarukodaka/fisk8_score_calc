@@ -80,7 +80,7 @@ h1 Score Calculater
       td id="tes"
         = "%.2f" % [score[:tes]]
         
-  = submit_tag "Calc"
-  //= button_tag "Reset", onclick: "location.href = '/calc'"
-  = button_tag "Reset", type: "reset"
+  = submit_tag "Submit"
+  = button_tag "Reset", type: "reset", onclick: "location.href = '/calc'"
+  //= button_tag "Reset", type: "reset"
 
