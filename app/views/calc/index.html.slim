@@ -12,8 +12,8 @@ h1 Score Calculater
 = form_tag url_for(controller: :calc, action: :index), method: :get do
   .row
     label Category / Segment
-    = select_tag :category, options_for_select(["MEN", "LADIES"]), onchange: "score_calc.recalc();"
-    = select_tag :segment, options_for_select(["SP", "FS"]), onchange: "score_calc.recalc();"
+    = select_tag :category, options_for_select(["MEN", "LADIES"], selected: params['category'] || 'MEN'), onchange: "score_calc.recalc();"
+    = select_tag :segment, options_for_select(["SP", "FS"], selected: params['segment'] || 'SP'), onchange: "score_calc.recalc();"
 
   table.table-striped.table-hover.table-condensed
     tr
@@ -32,12 +32,12 @@ h1 Score Calculater
         td= i
         td Jump
         td
-          input type="text" id="jump#{i}_element" onchange="score_calc.recalc();"
+          = text_field_tag "jump#{i}_element", params["jump#{i}_element"], onchange: "score_calc.recalc();"
         td
-          = check_box_tag "jump#{i}_credit", nil, false, onchange: "score_calc.recalc();"
+          = check_box_tag "jump#{i}_credit", nil, params["jump#{i}_credit"], onchange: "score_calc.recalc();"
         td id="jump#{i}_base_value"
         td
-          = select_tag "jump#{i}_goe", options_for_select(-3..3, selected: params["jump#{i}_goe"] || 0), onchange: "score_calc.recalc();"
+          = select_tag "jump#{i}_goe", options_for_select(-3..3, selected: params["jump#{i}_goe"]), onchange: "score_calc.recalc();"
         td id="jump#{i}_goe_value"
         td id="jump#{i}_value"          
         td id="jump#{i}_validated_element"          
@@ -49,7 +49,7 @@ h1 Score Calculater
         td= i
         td= Spin
         td
-          input type="text" id="spin#{i}_element" onchange="score_calc.recalc();"
+          = text_field_tag "spin#{i}_element", params["spin#{i}_element"], onchange: "score_calc.recalc();"
         td
         td id="spin#{i}_base_value"
         td= select_tag "spin#{i}_goe", options_for_select(-3..3, selected: params["spin#{i}_goe"] || 0), onchange: "score_calc.recalc();"
@@ -62,7 +62,7 @@ h1 Score Calculater
         td= i
         td= Step
         td
-          input type="text" id="step#{i}_element" onchange="score_calc.recalc();"
+          = text_field_tag "step#{i}_element", params["step#{i}_element"], onchange: "score_calc.recalc();"
         td
         td id="step#{i}_base_value"
         td= select_tag "step#{i}_goe", options_for_select(-3..3, selected: params["step#{i}_goe"] || 0), onchange: "score_calc.recalc();"
